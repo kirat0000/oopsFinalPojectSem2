@@ -1,0 +1,199 @@
+﻿@page "/fetchdata"
+@using ConcertBookingApp1.Data;
+@using Microsoft.Maui.Storage
+@using System.IO
+@using System.Text.Json
+@using System.Collections.Generic
+@inject EventController eventController
+<div hidden="@ishideEdit" class="row-cols-2">
+    <div>
+        <label>Genre: </label>
+        <select @bind="genre">
+            <option value="Rock">Rock</option>
+            <option value="Pop">Pop</option>
+            <option value="Country">Country</option>
+            <option value="Hip-Hop">Hip-Hop</option>
+        </select>
+    </div>
+    <div class="row-cols-2"><label>Artist     : </label><input type="text" @bind="artist" placeholder="Enter Artist name" /></div>
+    <div class ="row-cols-2"><label>Date       : </label><input type="date" @bind="dateTime" placeholder="Enter concert date" /></div>
+    <div class="row-cols-2"><label>Time       : </label><input type="time" @bind="time" placeholder="Enter concert time" /></div>
+    <div class="row-cols-2"><label>Venue      : </label><input type="text" @bind="venue" placeholder="Enter concert venue" /></div>
+    <div class="row-cols-2"><label>City       : </label><input type="text" @bind="city" placeholder="Enter concert city" /></div>
+    <div class="row-cols-2"><label>Description: </label><input type="text" @bind="discription" placeholder="Enter discription" /></div>
+    <div class="row-cols-2"><label>Ticket Cost: </label><input type="number" @bind="ticketcost" placeholder="Enter cost/ticket" /></div>
+    <div class="row-cols-2"><button class="btn btn-primary" @onclick="SaveDetails">Update Concert Detail</button></div>
+    <div class="row-cols-2"><button class="btn btn-primary" @onclick="backToList">Back</button></div>
+</div>
+@if (eventDetails != null)
+{
+    <table hidden="@ishideList">
+        <style>
+            table {
+                font-family: arial, sans-serif;
+                border-collapse: collapse;
+                width: 100%;
+            }
+
+            td, th {
+                border: 1px solid #dddddd;
+                text-align: left;
+                padding: 8px;
+            }
+        </style>
+
+        <thead>
+            <tr>
+                <th>
+                    Genre
+                </th>
+                <th>
+                    Artist
+                </th>
+                <th>
+                    Date
+                </th>
+                <th>
+                    Time
+                </th>
+                <th>
+                    Venue
+                </th>
+                <th>
+                    City
+                </th>
+                <th>
+                    Description
+                </th>
+                <th>
+                    Action
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < eventDetails.Count; i++)
+            {
+                int conId = eventDetails[i].Concert_Id;
+                <tr>
+                    <td>@eventDetails[i].genre</td>
+                    <td>@eventDetails[i].artist</td>
+                    <td>@eventDetails[i].date.Value.ToString("dd-MM-yyyy")</td>
+                    <td>@eventDetails[i].time</td>
+                    <td>@eventDetails[i].venue</td>
+                    <td>@eventDetails[i].city</td>
+                    <td>@eventDetails[i].description</td>
+                    <td>
+                        <button @onclick="() => FillData(conId)" id="@eventDetails[i].Concert_Id">Edit</button>
+                        <button @onclick="() => DeleteData(conId)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+}
+else
+{
+    <p>No events found.</p>
+}
+
+@code {
+    private string Genre;
+    string genre;
+    string artist;
+    DateTime? dateTime;
+    DateTime time;
+    string venue;
+    string city;
+    string discription;
+    int ticketcost;
+    private List<Event> eventDetails;
+    Event eventData;
+    private bool ishideEdit = true;
+    private bool ishideList = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        eventDetails = await eventController.GetEvents(Genre);
+
+    }
+
+    private async void FillData(int id)
+    {
+        try
+        {//var iD= event.target.id;
+            eventData = await eventController.GetEventById(id);
+            if (eventData != null)
+            {
+                genre = eventData.genre;
+                artist = eventData.artist;
+                dateTime = eventData.date;
+                venue = eventData.venue;
+                city = eventData.city;
+                discription = eventData.description;
+                ticketcost = eventData.ticket_cost;
+                time = Convert.ToDateTime(eventData.time);
+                ishideEdit = false;
+                ishideList = true;
+            }
+        }
+        catch (Exception Ex)
+        {
+
+        }
+    }
+    private async Task DeleteData(int id)
+    {
+        await eventController.Delete(id);
+        eventDetails = await eventController.GetEvents(Genre);
+    }
+    private void backToList()
+    {
+        ishideEdit = true;
+        ishideList = false;   
+    }
+  
+    private async void SaveDetails()
+    {
+        if (string.IsNullOrEmpty(genre))
+        {
+            await App.Current.MainPage.DisplayAlert("Error", "Select genre", "OK");
+            return;
+        }
+        else if (string.IsNullOrEmpty(artist))
+        {
+            await App.Current.MainPage.DisplayAlert("Error", "enter artist name", "OK");
+            return;
+        }
+        eventData.genre = genre;
+        eventData.artist = artist;
+        eventData.date = dateTime;
+        eventData.time = time.ToString();
+        eventData.venue = venue;
+        eventData.city = city;
+        eventData.description = discription;
+        eventData.ticket_cost = ticketcost;
+        var response = await eventController.UpdateEvent(eventData);
+        if (response)
+        {
+            genre = string.Empty;
+            artist = string.Empty;
+            venue = string.Empty;
+            city = string.Empty;
+            discription = string.Empty;
+            ticketcost = 0;
+            dateTime = null;
+            await App.Current.MainPage.DisplayAlert("Saved", "Data Saved", "OK"); // Display Alert for Saving Data
+
+        }
+        else
+        {
+            await App.Current.MainPage.DisplayAlert("Error", "Error in save", "OK");
+        }
+        ishideEdit = true;
+        ishideList = false;
+        return;
+    }
+}
+

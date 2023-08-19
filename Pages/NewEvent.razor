@@ -1,0 +1,70 @@
+﻿@page "/NewEvent"
+@using ConcertBookingApp1.Data;
+@inject EventController eventController
+<h1>Concert Details</h1>
+<div>
+    <div>
+    <label>Genre: </label>
+    <select @bind="genre">
+        <option value="Rock">Rock</option>
+        <option value="Pop">Pop</option>
+        <option value="Country">Country</option>
+        <option value="Hip-Hop">Hip-Hop</option>
+    </select></div>
+    <div><label>Artist     : </label><input type="text" @bind="artist" placeholder="Enter Artist name" /></div>
+    <div><label>Date       : </label><input type="date" @bind="dateTime" placeholder="Enter concert date" /></div>
+    <div><label>Time       : </label><input type="time" @bind="time" placeholder="Enter concert time" /></div>
+    <div><label>Venue      : </label><input type="text" @bind="venue" placeholder="Enter concert venue" /></div>
+    <div><label>City       : </label><input type="text" @bind="city" placeholder="Enter concert city" /></div>
+    <div><label>Description: </label><input type="text" @bind="discription" placeholder="Enter discription" /></div>
+    <div><label>Ticket Cost: </label><input type="number" @bind="ticketcost" placeholder="Enter cost/ticket" /></div>
+    <div><button class="btn btn-primary" @onclick="SaveDetails">Save Concert Detail</button></div>
+</div>
+@code {
+    string genre;
+    string artist;
+    DateTime dateTime;
+    DateTime time;
+    string venue;
+    string city;
+    string discription;
+    int ticketcost;
+    private async void SaveDetails()
+    {   if(string.IsNullOrEmpty(genre))
+        {
+            await App.Current.MainPage.DisplayAlert("Error", "Select genre", "OK");
+            return;
+        }
+        else if (string.IsNullOrEmpty(artist))
+        {
+            await App.Current.MainPage.DisplayAlert("Error", "enter artist name", "OK");
+            return;
+        }
+        Event @event = new Event();
+        @event.genre = genre;
+        @event.artist = artist;
+        @event.date = dateTime;
+        @event.time = time.ToString();
+        @event.venue = venue;
+        @event.city = city;
+        @event.description = discription;
+        @event.ticket_cost = ticketcost;
+        var response= await eventController.AddEvent(@event);
+        if(response)
+        {
+            await App.Current.MainPage.DisplayAlert("Saved", "Data Saved", "OK"); // Display Alert for Saving Data
+            genre=string.Empty;
+            artist=string.Empty;
+            venue=string.Empty;
+            city=string.Empty;
+            discription=string.Empty;
+            ticketcost=0;
+        }
+        else
+        {
+            await App.Current.MainPage.DisplayAlert("Error", "Error in save", "OK"); 
+        }
+
+    }
+   
+}

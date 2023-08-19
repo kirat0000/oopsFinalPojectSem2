@@ -1,0 +1,113 @@
+﻿@page "/EventList"
+@using ConcertBookingApp1.Data;
+@using Microsoft.Maui.Storage
+@using System.IO
+@using System.Text.Json
+@using System.Collections.Generic
+@inject EventController eventController
+
+<h2>Find Upcoming Events</h2>
+<p>Enter the music genre to search for upcoming events:</p>
+<p>Available genres:</p>
+<ul>
+    <li>Rock</li>
+    <li>Pop</li>
+    <li>Country</li>
+    <li>Hip-Hop</li>
+</ul>
+<hr>
+<div>
+    <p>Enter the genre:</p><input type="text" @bind="Genre" placeholder="Enter genre" />
+
+    <button @onclick=searchEventDetail>Search</button>
+</div>
+
+@if (eventDetails != null)
+{
+    <table>
+        <style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+</style>
+
+        <thead>
+            <tr>
+                <th>
+                    Genre
+                </th>
+                <th>
+                    Artist
+                </th>
+                <th>
+                    Date
+                </th>
+                <th>
+                    Time
+                </th>
+                <th>
+                    Venue
+                </th>
+                <th>
+                    City
+                </th>
+                <th>
+                    Description
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < eventDetails.Count; i++)
+            {
+                <tr>
+                    <td>@eventDetails[i].genre</td>
+                    <td>@eventDetails[i].artist</td>
+                    <td>@eventDetails[i].date.Value.ToString("dd-MM-yyyy")</td>
+                    <td>@eventDetails[i].time</td>
+                    <td>@eventDetails[i].venue</td>
+                    <td>@eventDetails[i].city</td>
+                    <td>@eventDetails[i].description</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+}
+else
+{
+    <p>No events found.</p>
+}
+
+@code {
+    private string Genre;
+    private List<Event> eventDetails;
+
+
+
+    //     eventDetails = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await searchEventDetail();
+    }
+    private async Task searchEventDetail()
+    {
+        try
+        {
+            eventDetails = await eventController.GetEvents(Genre);
+
+        }
+        catch (Exception e)
+        {
+
+        }
+    }
+}
